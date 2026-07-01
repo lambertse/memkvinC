@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.16)
 project(bitcask_cpp)
 
 # Set C++ standard first
@@ -17,6 +17,9 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY ON)
+
 # Disable unused test builds for dependencies
 set(CRC32C_BUILD_TESTS OFF)
 set(CRC32C_USE_GLOG OFF)
@@ -32,9 +35,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(crc32c)
 
 FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
+set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 FetchContent_Declare(
@@ -44,7 +49,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(libcuckoo)
 include_directories(${libcuckoo_SOURCE_DIR})
-include_directories(${googletest_SOURCE_DIR}/googletest/include/)
 
 # Include all header files in the include directory
 file(GLOB HEADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.hpp")

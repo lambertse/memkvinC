@@ -7,7 +7,12 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0")
 include_directories(${CMAKE_SOURCE_DIR}/src)
 macro(add_test_executable name)
   add_executable(${name} ${name}_test.cpp)
-  target_link_libraries(${name} gtest_main bitcask_cpp)
+  target_link_libraries(${name} 
+    PRIVATE
+        GTest::gtest
+        GTest::gtest_main
+        bitcask_cpp
+  )
   add_test(${name} ${name})
 endmacro()
 
