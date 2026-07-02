@@ -1,0 +1,3 @@
+add_executable(bitcask_benchmark bitcask_benchmark.cpp)
+target_link_libraries(bitcask_benchmark PRIVATE bitcask_cpp benchmark::benchmark_main)
+target_include_directories(bitcask_benchmark PRIVATE ${CMAKE_SOURCE_DIR}/include)
