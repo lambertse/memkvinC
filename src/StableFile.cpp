@@ -35,6 +35,7 @@ StableFile::Handler StableFile::Create(file::FileHandler file) {
 }
 
 Value StableFile::Read(const Key &key, Offset offset, size_t size) {
+  _file->clear(); // clear eofbit/failbit left by the last read-to-EOF scan
   _file->seekg(offset, std::ios::beg);
   std::string value = file::ReadValueFromFile(_file, size);
   return value;

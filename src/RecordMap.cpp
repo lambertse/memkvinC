@@ -21,4 +21,6 @@ void RecordMap::Put(const Key &key, const Hint &value) {
 
 void RecordMap::Delete(const Key &key) { _map.erase(key); }
 
+void RecordMap::Clear() { _map.clear(); }
+
 } // namespace bitcask

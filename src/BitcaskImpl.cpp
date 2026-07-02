@@ -55,10 +55,31 @@ using Writes = std::vector<Write>;
 bool BitcaskImpl::RestoreActiveMap() {
   std::error_code ec;
   auto activePath = Internal::getActivePathInDir(_dbDir);
+
+  // Pre-count stable files so we assign the correct active FD in the hints.
+  // getActiveFD() returns _stableFiles.size(), but stable files aren't loaded
+  // yet at this point, so we count from disk instead.
+  std::string activeFileName =
+      std::filesystem::path(activePath).filename().string();
+  uint32_t stableCount = 0;
+  for (const auto &entry : std::filesystem::directory_iterator(_dbDir, ec)) {
+    if (!entry.is_regular_file())
+      continue;
+    const auto fname = entry.path().filename().string();
+    if (fname == activeFileName)
+      continue;
+    try {
+      std::stoul(fname); // only count numeric .db files
+      stableCount++;
+    } catch (...) {
+    }
+  }
+
   if (std::filesystem::exists(activePath, ec)) {
-    RecordFoundCallback callback = [this](const Key &key, const Value &value,
-                                          RecordInf record) {
-      Hint hint{getActiveFD(), record.valueOffset, sizeof(value)};
+    RecordFoundCallback callback = [this, stableCount](const Key &key,
+                                                       const Value &value,
+                                                       RecordInf record) {
+      Hint hint{stableCount, record.valueOffset, (uint32_t)value.size()};
       _recordMap.Put(key, hint);
       _activeMap.Put(key, value);
     };
@@ -89,7 +110,7 @@ bool BitcaskImpl::RestoreStableMap() {
     uint32_t fileID = std::stoul(entry.path().filename().string());
     RecordFoundCallback callback = [&](const Key &key, const Value &value,
                                        RecordInf record) {
-      Hint hint{fileID, record.valueOffset, sizeof(value)};
+      Hint hint{fileID, record.valueOffset, (uint32_t)value.size()};
       _recordMap.Put(key, hint);
     };
     FileHandler file = StableFile::Restore(entry.path().string(), callback);
@@ -157,7 +178,7 @@ bool BitcaskImpl::CommitWrite(Writes &writes) {
       BITCASK_LOGGER_INFO("key: {}, value: {}", key, value);
     }
     auto valueOffset = _activeFile->Write(key, value);
-    records.push_back(Hint{getActiveFD(), valueOffset, sizeof(value)});
+    records.push_back(Hint{getActiveFD(), valueOffset, (uint32_t)value.size()});
     idx++;
     if (valueOffset < _setting.maxFileSize) {
       continue;

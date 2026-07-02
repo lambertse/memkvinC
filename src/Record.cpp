@@ -31,9 +31,9 @@ RecordInf WriteRecord(file::FileHandler &file, const Key &key,
 
   RecordInf recordInf;
   recordInf.keyOffset = file->tellp();
-  file::WriteFile(file, key.c_str(), sizeof(key.c_str()));
+  file::WriteFile(file, key.c_str(), key.size());
   recordInf.valueOffset = file->tellp();
-  file::WriteFile(file, value.c_str(), sizeof(value.c_str()));
+  file::WriteFile(file, value.c_str(), value.size());
   recordInf.size = size;
   BITCASK_LOGGER_DEBUG("Write record: key={}, value={}, offset after write: {}",
                        key, value, file->tellp());

@@ -66,6 +66,7 @@ else()
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE crc32c)
 
+enable_testing()
 add_subdirectory(test)
 
 
