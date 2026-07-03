@@ -1,14 +1,16 @@
-#include "RecordMap.hpp"
-#include "bitcask/Logger.hpp"
 #include <gtest/gtest.h>
+
 #include <iostream>
 #include <thread>
 #include <vector>
 
+#include "RecordMap.hpp"
+#include "bitcask/Logger.hpp"
+
 using namespace bitcask;
 
 class RecordMapTest : public ::testing::Test {
-protected:
+ protected:
   RecordMap rmap;
 };
 
@@ -81,8 +83,7 @@ TEST_F(RecordMapTest, ConcurrentPutsAllKeysReadable) {
       rmap.Put(std::to_string(i), Hint{(uint32_t)i, (uint32_t)(i * 10), 4u});
     });
   }
-  for (auto &t : threads)
-    t.join();
+  for (auto& t : threads) t.join();
 
   for (int i = 0; i < n; i++) {
     auto h = rmap.Get(std::to_string(i));
@@ -92,7 +93,7 @@ TEST_F(RecordMapTest, ConcurrentPutsAllKeysReadable) {
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   logger::init(logger::LOG_LEVEL_SILENCE);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

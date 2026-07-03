@@ -28,60 +28,77 @@ inline constexpr LogLevel LOG_LEVEL_FROM_INFO =
 inline constexpr LogLevel LOG_LEVEL_FROM_DEBUG =
     LOG_LEVEL_DEBUG | LOG_LEVEL_FROM_INFO;
 
-using LoggingFunctionType = std::function<void(const std::string &msg)>;
+using LoggingFunctionType = std::function<void(const std::string& msg)>;
 
 BITCASK_EXPORT void init(LogLevels allowedLevels = LOG_LEVEL_SILENCE,
                          LoggingFunctionType outLogFunc = {},
                          LoggingFunctionType errLogFunc = {});
 
 BITCASK_EXPORT void stopLogging();
-BITCASK_EXPORT void
-changeLogLevels(LogLevels allowedLevels = LOG_LEVEL_SILENCE);
+BITCASK_EXPORT void changeLogLevels(
+    LogLevels allowedLevels = LOG_LEVEL_SILENCE);
 BITCASK_EXPORT bool allowed(LogLevel level);
 BITCASK_EXPORT void enable(LogLevel level);
 BITCASK_EXPORT void disable(LogLevel level);
-BITCASK_EXPORT void logImpl(LogLevel filteredLevel, const std::string &msg);
+BITCASK_EXPORT void logImpl(LogLevel filteredLevel, const std::string& msg);
 
-template <typename... Msg> void debug(Msg &&...msg);
-template <typename... Msg> void info(Msg &&...msg);
-template <typename... Msg> void warn(Msg &&...msg);
-template <typename... Msg> void error(Msg &&...msg);
-template <typename... Msg> void fatal(Msg &&...msg);
-template <typename... Msg> void verbose(Msg &&...msg);
-template <typename... Msg> void log(LogLevel level, Msg &&...msg);
+template <typename... Msg>
+void debug(Msg&&... msg);
+template <typename... Msg>
+void info(Msg&&... msg);
+template <typename... Msg>
+void warn(Msg&&... msg);
+template <typename... Msg>
+void error(Msg&&... msg);
+template <typename... Msg>
+void fatal(Msg&&... msg);
+template <typename... Msg>
+void verbose(Msg&&... msg);
+template <typename... Msg>
+void log(LogLevel level, Msg&&... msg);
 
 //--------------------------- Parser declaration----------------------------
-std::string to_string(const std::wstring &arg);
-template <typename T> std::string to_string(const T &arg);
-template <typename... Msg> std::string formatMsg(Msg &&...args);
+std::string to_string(const std::wstring& arg);
+template <typename T>
+std::string to_string(const T& arg);
+template <typename... Msg>
+std::string formatMsg(Msg&&... args);
 
 //------------------------------Implementation---------------------------------
-template <typename... Msg> void log(LogLevel level, Msg &&...msg) {
+template <typename... Msg>
+void log(LogLevel level, Msg&&... msg) {
   if (allowed(level)) {
     std::string formatedStr = formatMsg(std::forward<Msg>(msg)...);
     logImpl(level, formatedStr);
   }
 }
-template <typename... Msg> void debug(Msg &&...msg) {
+template <typename... Msg>
+void debug(Msg&&... msg) {
   log(LOG_LEVEL_DEBUG, "DEBUG   :    ", std::forward<Msg>(msg)...);
 }
-template <typename... Msg> void info(Msg &&...msg) {
+template <typename... Msg>
+void info(Msg&&... msg) {
   log(LOG_LEVEL_INFO, "INFO    :    ", std::forward<Msg>(msg)...);
 }
-template <typename... Msg> void warn(Msg &&...msg) {
+template <typename... Msg>
+void warn(Msg&&... msg) {
   log(LOG_LEVEL_WARN, "WARN    :    ", std::forward<Msg>(msg)...);
 }
-template <typename... Msg> void error(Msg &&...msg) {
+template <typename... Msg>
+void error(Msg&&... msg) {
   log(LOG_LEVEL_ERROR, "ERROR   :    ", std::forward<Msg>(msg)...);
 }
-template <typename... Msg> void fatal(Msg &&...msg) {
+template <typename... Msg>
+void fatal(Msg&&... msg) {
   log(LOG_LEVEL_FATAL, "FATAL   :    ", std::forward<Msg>(msg)...);
 }
-template <typename... Msg> void verbose(Msg &&...msg) {
+template <typename... Msg>
+void verbose(Msg&&... msg) {
   log(LOG_LEVEL_VERBOSE, "VERBOSE :    ", std::forward<Msg>(msg)...);
 }
 
-template <typename T> std::string to_string(const T &arg) {
+template <typename T>
+std::string to_string(const T& arg) {
   try {
     std::stringstream ss;
     ss << arg;
@@ -91,11 +108,11 @@ template <typename T> std::string to_string(const T &arg) {
   }
 }
 
-template <typename... Msg> std::string formatMsg(Msg &&...args) {
+template <typename... Msg>
+std::string formatMsg(Msg&&... args) {
   std::vector<std::string> arg_strings;
   ((arg_strings.push_back(to_string(args))), ...);
-  if (arg_strings.size() < 2)
-    return ""; // Not in right format
+  if (arg_strings.size() < 2) return "";  // Not in right format
 
   std::string format_string = arg_strings[1];
   std::string brace = "{}";
@@ -104,8 +121,7 @@ template <typename... Msg> std::string formatMsg(Msg &&...args) {
   size_t idx = 0;
   while (idx < format_string.size()) {
     int32_t found_idx = format_string.find(brace, idx);
-    if (found_idx == std::string::npos)
-      break;
+    if (found_idx == std::string::npos) break;
     std::string replace_str = "";
     if (arg_idx < arg_strings.size()) {
       replace_str = arg_strings[arg_idx++];
@@ -125,7 +141,7 @@ inline bool errorAllowed() { return allowed(LOG_LEVEL_ERROR); }
 inline bool fatalAllowed() { return allowed(LOG_LEVEL_FATAL); }
 inline bool verboseAllowed() { return allowed(LOG_LEVEL_VERBOSE); }
 
-using MsCStr = const char *;
+using MsCStr = const char*;
 inline constexpr MsCStr constexprPastLastSlash(MsCStr str, MsCStr last_slash) {
 #if defined(_WINDOWS) || defined(WIN32)
   constexpr char slash = '\\';
@@ -141,7 +157,7 @@ inline constexpr MsCStr constexprPastLastSlash(MsCStr str) {
   return constexprPastLastSlash(str, str);
 }
 
-} // namespace bitcask::logger
+}  // namespace bitcask::logger
 #define BITCASK_LOG_LEVEL_SILENCE 0
 #define BITCASK_LOG_LEVEL_DEBUG 1
 #define BITCASK_LOG_LEVEL_INFO 2
@@ -154,25 +170,25 @@ inline constexpr MsCStr constexprPastLastSlash(MsCStr str) {
 #define BITCASK_MIN_ALLOWED_LOG_LEVEL BITCASK_LOG_LEVEL_INFO
 #endif
 
-#define BITCASK_LOGGER_DEBUG(...)                                              \
-  do {                                                                         \
-    if (bitcask::logger::debugAllowed()) {                                     \
-      bitcask::logger::debug(__VA_ARGS__, "  --> [[ ",                         \
-                             BITCASK_SHORT_FILE_NAME, ":", __LINE__, " ]]");   \
-    }                                                                          \
+#define BITCASK_LOGGER_DEBUG(...)                                            \
+  do {                                                                       \
+    if (bitcask::logger::debugAllowed()) {                                   \
+      bitcask::logger::debug(__VA_ARGS__, "  --> [[ ",                       \
+                             BITCASK_SHORT_FILE_NAME, ":", __LINE__, " ]]"); \
+    }                                                                        \
   } while (false)
 
-#define BITCASK_LOGGER_WRITE(logtype, ...)                                     \
-  do {                                                                         \
-    if (bitcask::logger::logtype##Allowed()) {                                 \
-      if (!bitcask::logger::debugAllowed()) {                                  \
-        bitcask::logger::logtype(__VA_ARGS__);                                 \
-      } else {                                                                 \
-        bitcask::logger::logtype(__VA_ARGS__, "  --> [[ ",                     \
-                                 BITCASK_SHORT_FILE_NAME, ":", __LINE__,       \
-                                 " ]]");                                       \
-      }                                                                        \
-    }                                                                          \
+#define BITCASK_LOGGER_WRITE(logtype, ...)                               \
+  do {                                                                   \
+    if (bitcask::logger::logtype##Allowed()) {                           \
+      if (!bitcask::logger::debugAllowed()) {                            \
+        bitcask::logger::logtype(__VA_ARGS__);                           \
+      } else {                                                           \
+        bitcask::logger::logtype(__VA_ARGS__, "  --> [[ ",               \
+                                 BITCASK_SHORT_FILE_NAME, ":", __LINE__, \
+                                 " ]]");                                 \
+      }                                                                  \
+    }                                                                    \
   } while (false)
 
 #if BITCASK_MIN_ALLOWED_LOG_LEVEL <= BITCASK_LOG_LEVEL_VERBOSE
@@ -205,5 +221,5 @@ inline constexpr MsCStr constexprPastLastSlash(MsCStr str) {
 #define BITCASK_LOGGER_FATAL(...) while (false)
 #endif
 
-#define BITCASK_SHORT_FILE_NAME                                                \
+#define BITCASK_SHORT_FILE_NAME \
   bitcask::logger::constexprPastLastSlash(__FILE__)

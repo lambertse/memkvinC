@@ -1,24 +1,26 @@
 #include "bitcask/Bitcask.hpp"
+
+#include <gtest/gtest.h>
+
 #include <bitcask/Logger.hpp>
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <iostream>
 
 using namespace bitcask;
 
 // Helper: create a fresh DB dir unique to this test run
-static std::string makeTmpDir(const std::string &prefix) {
-  std::string path = "/tmp/" + prefix + "_" +
-                     std::to_string(std::chrono::steady_clock::now()
-                                        .time_since_epoch()
-                                        .count()) +
-                     "/";
+static std::string makeTmpDir(const std::string& prefix) {
+  std::string path =
+      "/tmp/" + prefix + "_" +
+      std::to_string(
+          std::chrono::steady_clock::now().time_since_epoch().count()) +
+      "/";
   std::filesystem::create_directories(path);
   return path;
 }
 
 class BitCaskTest : public ::testing::Test {
-public:
+ public:
   void SetUp() override {
     _dbDir = makeTmpDir("bitcask_test");
     _db = Bitcask::Create(_dbDir);
@@ -29,9 +31,9 @@ public:
     std::filesystem::remove_all(_dbDir);
   }
 
-protected:
+ protected:
   std::string _dbDir;
-  Bitcask *_db = nullptr;
+  Bitcask* _db = nullptr;
 };
 
 // ── Basic Put / Get ──────────────────────────────────────────────────────────
@@ -39,7 +41,7 @@ protected:
 TEST_F(BitCaskTest, PutAndGet) {
   _db->PutAsync("key1", "value1");
   _db->PutAsync("key2", "value2");
-  _db->Put("key3", "value3"); // synchronous: blocks until committed
+  _db->Put("key3", "value3");  // synchronous: blocks until committed
 
   EXPECT_EQ(_db->Get("key1").value_or(""), "value1");
   EXPECT_EQ(_db->Get("key2").value_or(""), "value2");
@@ -114,11 +116,11 @@ TEST_F(BitCaskTest, DeleteReturnsFalse) {
 // Use a very small maxFileSize to force rotation after a few records.
 
 class BitCaskRotationTest : public ::testing::Test {
-public:
+ public:
   void SetUp() override {
     _dbDir = makeTmpDir("bitcask_rotation");
     Setting s;
-    s.maxFileSize = 128; // tiny: forces rotation every ~2-3 records
+    s.maxFileSize = 128;  // tiny: forces rotation every ~2-3 records
     _db = Bitcask::Create(_dbDir, s);
   }
   void TearDown() override {
@@ -127,9 +129,9 @@ public:
     std::filesystem::remove_all(_dbDir);
   }
 
-protected:
+ protected:
   std::string _dbDir;
-  Bitcask *_db = nullptr;
+  Bitcask* _db = nullptr;
 };
 
 TEST_F(BitCaskRotationTest, KeysWrittenBeforeRotationAreReadable) {
@@ -149,9 +151,8 @@ TEST_F(BitCaskRotationTest, MultipleStableFilesCreated) {
 
   // At least one .db file beyond the active file should exist
   int dbFileCount = 0;
-  for (auto &entry : std::filesystem::directory_iterator(_dbDir))
-    if (entry.path().extension() == ".db")
-      dbFileCount++;
+  for (auto& entry : std::filesystem::directory_iterator(_dbDir))
+    if (entry.path().extension() == ".db") dbFileCount++;
 
   EXPECT_GT(dbFileCount, 1) << "Expected rotation to create multiple .db files";
 }
@@ -173,7 +174,7 @@ TEST_F(BitCaskRotationTest, DataPersistsAfterRestartWithRotation) {
         << "Failed after restart for key" << i;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   logger::init(logger::LOG_LEVEL_FROM_ERROR,
                [](std::string msg) { std::cout << msg << std::endl; });
   ::testing::InitGoogleTest(&argc, argv);

@@ -1,40 +1,40 @@
 #pragma once
-#include "ActiveFile.hpp"
-#include "ActiveMap.hpp"
-#include "RecordMap.hpp"
-#include "StableFile.hpp"
-#include "bitcask/Setting.hpp"
-#include "bitcask/Type.hpp"
-
 #include <atomic>
 #include <cstdint>
 #include <future>
 #include <map>
 #include <optional>
 #include <shared_mutex>
+
+#include "ActiveFile.hpp"
+#include "ActiveMap.hpp"
+#include "RecordMap.hpp"
+#include "StableFile.hpp"
+#include "bitcask/Setting.hpp"
+#include "bitcask/Type.hpp"
 namespace bitcask {
 
 using Writes = std::vector<struct Write>;
 class BitcaskImpl {
-public:
-  explicit BitcaskImpl(const std::string &dbDir,
-                       const Setting &setting = Setting{});
+ public:
+  explicit BitcaskImpl(const std::string& dbDir,
+                       const Setting& setting = Setting{});
   ~BitcaskImpl();
 
-  std::future<void> Put(const Key &key, const Value &value);
-  std::optional<Value> Get(const Key &key);
-  bool Delete(const Key &key);
+  std::future<void> Put(const Key& key, const Value& value);
+  std::optional<Value> Get(const Key& key);
+  bool Delete(const Key& key);
 
-private:
+ private:
   bool RestoreActiveMap();
   bool RestoreStableMap();
 
-  bool CommitWrite(Writes &writes);
+  bool CommitWrite(Writes& writes);
   bool CommitWorker();
 
   uint32_t getActiveFD() const;
 
-private:
+ private:
   std::shared_mutex _mtx;
   std::string _dbDir;
   std::atomic_bool _running;
@@ -48,4 +48,4 @@ private:
   std::map<uint32_t, std::shared_ptr<StableFile>> _stableFiles;
   std::shared_ptr<ActiveFile> _activeFile;
 };
-} // namespace bitcask
+}  // namespace bitcask

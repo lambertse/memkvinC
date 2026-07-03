@@ -1,15 +1,17 @@
+#include <gtest/gtest.h>
+
+#include <filesystem>
+#include <iostream>
+
 #include "BitcaskImpl.hpp"
 #include "bitcask/Logger.hpp"
-#include <filesystem>
-#include <gtest/gtest.h>
-#include <iostream>
 
 using namespace bitcask;
 
 #define DB_PATH "/tmp/test_exist_db/"
 
 class BitCaskImplRestoreTest : public ::testing::Test {
-protected:
+ protected:
   void SetUp() override {
     std::filesystem::remove_all(DB_PATH);
     std::filesystem::create_directory(DB_PATH);
@@ -27,7 +29,7 @@ TEST_F(BitCaskImplRestoreTest, DataPersistsAfterRestart) {
     EXPECT_EQ(db->Get("key1").value_or(""), "value1");
     EXPECT_EQ(db->Get("key2").value_or(""), "value2");
     EXPECT_EQ(db->Get("key3").value_or(""), "value3");
-  } // destructor flushes and closes all files
+  }  // destructor flushes and closes all files
 
   // Reopen from the same directory
   auto db2 = std::make_unique<BitcaskImpl>(DB_PATH);
@@ -86,7 +88,7 @@ TEST_F(BitCaskImplRestoreTest, InitFromExistedDB) {
   EXPECT_EQ(db2->Get("key1").value_or(""), "value1_new");
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   logger::init(logger::LOG_LEVEL_FROM_ERROR,
                [](std::string msg) { std::cout << msg << std::endl; });
   ::testing::InitGoogleTest(&argc, argv);

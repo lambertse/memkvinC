@@ -1,7 +1,9 @@
 #include "StableFile.hpp"
+
+#include <filesystem>
+
 #include "File.hpp"
 #include "bitcask/Logger.hpp"
-#include <filesystem>
 
 namespace bitcask {
 using namespace file;
@@ -13,10 +15,9 @@ StableFile::~StableFile() {
   }
 }
 
-file::FileHandler StableFile::Restore(const std::string &filename,
-                                      const RecordFoundCallback &callback) {
-  if (!std::filesystem::exists(filename))
-    return nullptr;
+file::FileHandler StableFile::Restore(const std::string& filename,
+                                      const RecordFoundCallback& callback) {
+  if (!std::filesystem::exists(filename)) return nullptr;
 
   file::FileHandler file = new std::fstream();
   if (!file::OpenFile(file, filename, std::ios::binary | std::ios::in) ||
@@ -34,10 +35,10 @@ StableFile::Handler StableFile::Create(file::FileHandler file) {
   return std::make_shared<StableFile>(file);
 }
 
-Value StableFile::Read(const Key &key, Offset offset, size_t size) {
-  _file->clear(); // clear eofbit/failbit left by the last read-to-EOF scan
+Value StableFile::Read(const Key& key, Offset offset, size_t size) {
+  _file->clear();  // clear eofbit/failbit left by the last read-to-EOF scan
   _file->seekg(offset, std::ios::beg);
   std::string value = file::ReadValueFromFile(_file, size);
   return value;
 }
-} // namespace bitcask
+}  // namespace bitcask

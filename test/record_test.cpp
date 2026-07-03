@@ -1,15 +1,18 @@
 #include "Record.hpp"
-#include "bitcask/Logger.hpp"
-#include <fstream>
+
 #include <gtest/gtest.h>
+
+#include <fstream>
 #include <iostream>
 #include <vector>
+
+#include "bitcask/Logger.hpp"
 
 using namespace bitcask;
 using namespace file;
 
 class RecordTest : public ::testing::Test {
-protected:
+ protected:
   void SetUp() override {
     testFile = new std::fstream();
     testFile->open("/tmp/testfile.dat", std::ios::binary | std::ios::out |
@@ -37,7 +40,7 @@ TEST_F(RecordTest, WriteAndReadSingleRecord) {
   WriteRecord(testFile, key, value);
 
   std::vector<std::pair<Key, Value>> results;
-  ReadAllRecordFromFile(testFile, [&](const Key &k, const Value &v, RecordInf) {
+  ReadAllRecordFromFile(testFile, [&](const Key& k, const Value& v, RecordInf) {
     results.push_back({k, v});
   });
 
@@ -49,11 +52,10 @@ TEST_F(RecordTest, WriteAndReadSingleRecord) {
 TEST_F(RecordTest, WriteAndReadMultipleRecordsInOrder) {
   std::vector<std::pair<Key, Value>> written = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  for (auto &[k, v] : written)
-    WriteRecord(testFile, k, v);
+  for (auto& [k, v] : written) WriteRecord(testFile, k, v);
 
   std::vector<std::pair<Key, Value>> results;
-  ReadAllRecordFromFile(testFile, [&](const Key &k, const Value &v, RecordInf) {
+  ReadAllRecordFromFile(testFile, [&](const Key& k, const Value& v, RecordInf) {
     results.push_back({k, v});
   });
 
@@ -66,10 +68,8 @@ TEST_F(RecordTest, WriteAndReadMultipleRecordsInOrder) {
 
 TEST_F(RecordTest, EmptyFileReadsNoRecords) {
   int callCount = 0;
-  ReadAllRecordFromFile(testFile,
-                        [&](const Key &, const Value &, RecordInf) {
-                          callCount++;
-                        });
+  ReadAllRecordFromFile(
+      testFile, [&](const Key&, const Value&, RecordInf) { callCount++; });
   EXPECT_EQ(callCount, 0);
 }
 
@@ -97,7 +97,7 @@ TEST_F(RecordTest, ReadAllRecordFromFileTest) {
   WriteRecord(testFile, key, value);
 
   std::vector<std::pair<Key, Value>> results;
-  ReadAllRecordFromFile(testFile, [&](const Key &k, const Value &v, RecordInf) {
+  ReadAllRecordFromFile(testFile, [&](const Key& k, const Value& v, RecordInf) {
     results.push_back({k, v});
   });
 
@@ -110,7 +110,7 @@ TEST_F(RecordTest, ReadAllRecordFromFileTest) {
   EXPECT_EQ(results[2].second, "111111111111111");
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   logger::init(logger::LOG_LEVEL_FROM_ERROR,
                [](std::string msg) { std::cout << msg << std::endl; });
   ::testing::InitGoogleTest(&argc, argv);

@@ -1,8 +1,10 @@
 #include "ActiveFile.hpp"
+
+#include <filesystem>
+
 #include "File.hpp"
 #include "Record.hpp"
 #include "bitcask/Logger.hpp"
-#include <filesystem>
 
 namespace bitcask {
 using namespace file;
@@ -13,8 +15,8 @@ ActiveFile::~ActiveFile() {
     delete _file;
   }
 }
-FileHandler ActiveFile::Restore(const std::string &filename,
-                                      const RecordFoundCallback &callback) {
+FileHandler ActiveFile::Restore(const std::string& filename,
+                                const RecordFoundCallback& callback) {
   if (!std::filesystem::exists(filename)) {
     BITCASK_LOGGER_INFO("File does not exist: {}", filename);
     return nullptr;
@@ -35,11 +37,11 @@ FileHandler ActiveFile::Restore(const std::string &filename,
   }
   // Reopen in append mode for future writes
   FileHandler result = new std::fstream();
-  if (!OpenFile(result, filename,
-                      std::ios::binary | std::ios::in | std::ios::out |
-                          std::ios::app)) {
+  if (!OpenFile(
+          result, filename,
+          std::ios::binary | std::ios::in | std::ios::out | std::ios::app)) {
     BITCASK_LOGGER_ERROR("Failed to open file for appending: {}", filename);
-    delete result; // Clean up on failure
+    delete result;  // Clean up on failure
     return nullptr;
   }
 
@@ -50,18 +52,18 @@ FileHandler ActiveFile::Restore(const std::string &filename,
 ActiveFile::Handler ActiveFile::Create(file::FileHandler file) {
   return std::make_shared<ActiveFile>(file);
 }
-ActiveFile::Handler ActiveFile::Create(const std::string &path) {
+ActiveFile::Handler ActiveFile::Create(const std::string& path) {
   FileHandler file = new std::fstream();
-  if (!OpenFile(file, path,
-                      std::ios::binary | std::ios::in | std::ios::out |
-                          std::ios::trunc)) {
+  if (!OpenFile(
+          file, path,
+          std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc)) {
     BITCASK_LOGGER_ERROR("Cannot create active file: {}", path);
     return nullptr;
   }
   return Create(file);
 }
 
-Offset ActiveFile::Write(const Key &key, const Value &value) {
+Offset ActiveFile::Write(const Key& key, const Value& value) {
   return WriteRecord(_file, key, value).valueOffset;
 }
 
@@ -72,4 +74,4 @@ FileHandler ActiveFile::Rotate() {
   swap(_file, newFile);
   return newFile;
 }
-} // namespace bitcask
+}  // namespace bitcask

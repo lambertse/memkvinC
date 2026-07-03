@@ -1,8 +1,9 @@
 #pragma once
 
+#include <functional>
+
 #include "File.hpp"
 #include "bitcask/Type.hpp"
-#include <functional>
 
 namespace bitcask {
 
@@ -13,12 +14,12 @@ struct RecordInf {
 };
 
 using RecordFoundCallback =
-    std::function<void(const Key &, const Value &, RecordInf)>;
+    std::function<void(const Key&, const Value&, RecordInf)>;
 
-void ReadAllRecordFromFile(file::FileHandler &file,
-                           const RecordFoundCallback &callback);
+void ReadAllRecordFromFile(file::FileHandler& file,
+                           const RecordFoundCallback& callback);
 
-RecordInf WriteRecord(file::FileHandler &file, const Key &key,
-                      const Value &value);
+RecordInf WriteRecord(file::FileHandler& file, const Key& key,
+                      const Value& value);
 
-} // namespace bitcask
+}  // namespace bitcask

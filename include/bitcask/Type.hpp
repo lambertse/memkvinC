@@ -8,4 +8,4 @@ using Value = std::string;
 using Offset = uint32_t;
 
 using Map = std::map<Key, Value>;
-} // namespace bitcask
+}  // namespace bitcask

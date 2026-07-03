@@ -1,21 +1,22 @@
 #pragma once
-#include "bitcask/Type.hpp"
 #include <libcuckoo/cuckoohash_map.hh>
 #include <optional>
+
+#include "bitcask/Type.hpp"
 
 namespace bitcask {
 
 class ActiveMap {
-public:
+ public:
   ActiveMap();
   ~ActiveMap();
 
-  void Put(const Key &key, const Value &value);
-  std::optional<Value> Get(const Key &key);
-  void Delete(const Key &key);
+  void Put(const Key& key, const Value& value);
+  std::optional<Value> Get(const Key& key);
+  void Delete(const Key& key);
   void Clear();
 
-private:
+ private:
   libcuckoo::cuckoohash_map<Key, Value> _map;
 };
-} // namespace bitcask
+}  // namespace bitcask

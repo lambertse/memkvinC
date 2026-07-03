@@ -1,5 +1,5 @@
 #include "BitcaskImpl.hpp"
-#include "bitcask/Logger.hpp"
+
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -7,21 +7,23 @@
 #include <system_error>
 #include <thread>
 
+#include "bitcask/Logger.hpp"
+
 namespace bitcask {
 using namespace file;
 
 namespace {
 namespace Internal {
-std::string ensureEndingSlash(const std::string &path) {
+std::string ensureEndingSlash(const std::string& path) {
   if (path.empty() || path.back() == '/') {
     return path;
   }
   return path + "/";
 }
-std::string getActivePathInDir(const std::string &dbDir) {
+std::string getActivePathInDir(const std::string& dbDir) {
   std::error_code ec;
   int maxFD = 0;
-  for (const auto &entry : std::filesystem::directory_iterator(dbDir, ec)) {
+  for (const auto& entry : std::filesystem::directory_iterator(dbDir, ec)) {
     if (!entry.is_regular_file()) {
       continue;
     }
@@ -36,17 +38,18 @@ std::string getActivePathInDir(const std::string &dbDir) {
   }
   return dbDir + std::to_string(maxFD) + ".db";
 
-} // namespace Internal
-} // namespace Internal
-} // namespace
+}  // namespace Internal
+}  // namespace Internal
+}  // namespace
 
 struct Write {
   Key key;
   Value value;
   std::promise<void> promise;
   Write(Key key, Value value) : key(key), value(value) {}
-  Write(Write &&write)
-      : key(std::move(write.key)), value(std::move(write.value)),
+  Write(Write&& write)
+      : key(std::move(write.key)),
+        value(std::move(write.value)),
         promise(std::move(write.promise)) {}
 };
 
@@ -62,22 +65,20 @@ bool BitcaskImpl::RestoreActiveMap() {
   std::string activeFileName =
       std::filesystem::path(activePath).filename().string();
   uint32_t stableCount = 0;
-  for (const auto &entry : std::filesystem::directory_iterator(_dbDir, ec)) {
-    if (!entry.is_regular_file())
-      continue;
+  for (const auto& entry : std::filesystem::directory_iterator(_dbDir, ec)) {
+    if (!entry.is_regular_file()) continue;
     const auto fname = entry.path().filename().string();
-    if (fname == activeFileName)
-      continue;
+    if (fname == activeFileName) continue;
     try {
-      std::stoul(fname); // only count numeric .db files
+      std::stoul(fname);  // only count numeric .db files
       stableCount++;
     } catch (...) {
     }
   }
 
   if (std::filesystem::exists(activePath, ec)) {
-    RecordFoundCallback callback = [this, stableCount](const Key &key,
-                                                       const Value &value,
+    RecordFoundCallback callback = [this, stableCount](const Key& key,
+                                                       const Value& value,
                                                        RecordInf record) {
       Hint hint{stableCount, record.valueOffset, (uint32_t)value.size()};
       _recordMap.Put(key, hint);
@@ -101,14 +102,14 @@ bool BitcaskImpl::RestoreStableMap() {
           .filename()
           .string();
 
-  for (const auto &entry : std::filesystem::directory_iterator(_dbDir, ec)) {
+  for (const auto& entry : std::filesystem::directory_iterator(_dbDir, ec)) {
     if (!entry.is_regular_file() ||
         entry.path().filename().string() == activeFileName) {
       continue;
     }
 
     uint32_t fileID = std::stoul(entry.path().filename().string());
-    RecordFoundCallback callback = [&](const Key &key, const Value &value,
+    RecordFoundCallback callback = [&](const Key& key, const Value& value,
                                        RecordInf record) {
       Hint hint{fileID, record.valueOffset, (uint32_t)value.size()};
       _recordMap.Put(key, hint);
@@ -119,7 +120,7 @@ bool BitcaskImpl::RestoreStableMap() {
   return true;
 }
 
-BitcaskImpl::BitcaskImpl(const std::string &dbDir, const Setting &setting)
+BitcaskImpl::BitcaskImpl(const std::string& dbDir, const Setting& setting)
     : _running(true), _setting(setting) {
   BITCASK_LOGGER_INFO("Max file size: {}", setting.maxFileSize);
   _dbDir = Internal::ensureEndingSlash(dbDir);
@@ -132,17 +133,16 @@ BitcaskImpl::BitcaskImpl(const std::string &dbDir, const Setting &setting)
 
 BitcaskImpl::~BitcaskImpl() {
   _running = false;
-  if (_commitProcessor.joinable())
-    _commitProcessor.join();
+  if (_commitProcessor.joinable()) _commitProcessor.join();
 }
 
-std::future<void> BitcaskImpl::Put(const Key &key, const Value &value) {
+std::future<void> BitcaskImpl::Put(const Key& key, const Value& value) {
   std::lock_guard lock(_mtx);
   _writes.emplace_back(Write{key, value});
   return _writes.back().promise.get_future();
 }
 
-std::optional<Value> BitcaskImpl::Get(const Key &key) {
+std::optional<Value> BitcaskImpl::Get(const Key& key) {
   std::shared_lock lock(_mtx);
   auto recordOpt = _recordMap.Get(key);
   if (!recordOpt.has_value()) {
@@ -161,19 +161,19 @@ std::optional<Value> BitcaskImpl::Get(const Key &key) {
   return _stableFiles[record.fd]->Read(key, record.offset, record.size);
 }
 
-bool BitcaskImpl::Delete(const Key &key) {
+bool BitcaskImpl::Delete(const Key& key) {
   // TBD
   return false;
 }
 
 uint32_t BitcaskImpl::getActiveFD() const { return _stableFiles.size(); }
 
-bool BitcaskImpl::CommitWrite(Writes &writes) {
+bool BitcaskImpl::CommitWrite(Writes& writes) {
   std::map<uint32_t, std::shared_ptr<StableFile>> newStableFiles;
   std::vector<Hint> records;
   int idx = 0, lastActiveWrite = 0;
 
-  for (const auto &[key, value, promise] : writes) {
+  for (const auto& [key, value, promise] : writes) {
     if (value == "37449") {
       BITCASK_LOGGER_INFO("key: {}, value: {}", key, value);
     }
@@ -205,7 +205,7 @@ bool BitcaskImpl::CommitWrite(Writes &writes) {
     _activeMap.Clear();
   }
   for (int i = 0; i < writes.size(); i++) {
-    auto &[key, value, promise] = writes[i];
+    auto& [key, value, promise] = writes[i];
     if (i >= lastActiveWrite) {
       _activeMap.Put(key, value);
     }
@@ -232,4 +232,4 @@ bool BitcaskImpl::CommitWorker() {
   return true;
 }
 
-} // namespace bitcask
+}  // namespace bitcask

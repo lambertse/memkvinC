@@ -62,7 +62,7 @@ static const bool useLargeWchar = false;
  *	@param[in] _str The wide string to make lowercase
  */
 template <typename Tchar>
-static inline void toLower(std::basic_string<Tchar> &_str) {
+static inline void toLower(std::basic_string<Tchar>& _str) {
   std::transform(_str.begin(), _str.end(), _str.begin(),
                  [](Tchar c) { return std::tolower(c, std::locale()); });
 }
@@ -72,7 +72,7 @@ static inline void toLower(std::basic_string<Tchar> &_str) {
  *	@param[in] _str The string to make uppercase
  */
 template <typename Tchar>
-static inline void toUpper(std::basic_string<Tchar> &_str) {
+static inline void toUpper(std::basic_string<Tchar>& _str) {
   std::transform(_str.begin(), _str.end(), _str.begin(),
                  [](Tchar c) { return std::toupper(c, std::locale()); });
 }
@@ -82,16 +82,19 @@ static inline void toUpper(std::basic_string<Tchar> &_str) {
  *	@param[in] _str The string to left trim
  */
 template <typename Tchar>
-static inline void ltrim(std::basic_string<Tchar> &_str) {
+static inline void ltrim(std::basic_string<Tchar>& _str) {
   _str.erase(_str.begin(), std::find_if(_str.begin(), _str.end(), [](Tchar c) {
                return !std::isspace(c, std::locale());
              }));
 }
 
 // forward decls for string_cast helper templates
-template <typename Tdst, typename Tsrc> struct string_cast_spec;
-template <typename Tdst, typename Tsrc> class string_cast_converter;
-template <typename T> struct char_type;
+template <typename Tdst, typename Tsrc>
+struct string_cast_spec;
+template <typename Tdst, typename Tsrc>
+class string_cast_converter;
+template <typename T>
+struct char_type;
 
 /**
  *	Primary template for casting between string types
@@ -100,36 +103,44 @@ template <typename T> struct char_type;
  *	Each supported Tdst type needs a string_cast_converter defined to be
  *supported.
  */
-template <typename Tdst, typename Tsrc> Tdst string_cast(const Tsrc &_source) {
+template <typename Tdst, typename Tsrc>
+Tdst string_cast(const Tsrc& _source) {
   return string_cast_spec<Tdst, Tsrc>::cast(_source);
 }
 // string_cast wrapper to allow pointers
-template <typename Tdst, typename Tsrc> Tdst string_cast(Tsrc *_source) {
+template <typename Tdst, typename Tsrc>
+Tdst string_cast(Tsrc* _source) {
   return string_cast_spec<
-      Tdst, typename char_type<const Tsrc *>::str_type>::cast(_source);
+      Tdst, typename char_type<const Tsrc*>::str_type>::cast(_source);
 }
 
 // templates for each char pointer type to map to the appropriate string version
-template <> struct char_type<const char *> {
+template <>
+struct char_type<const char*> {
   typedef std::string str_type;
 };
-template <> struct char_type<const wchar_t *> {
+template <>
+struct char_type<const wchar_t*> {
   typedef std::wstring str_type;
 };
-template <> struct char_type<const char16_t *> {
+template <>
+struct char_type<const char16_t*> {
   typedef std::u16string str_type;
 };
-template <> struct char_type<const char32_t *> {
+template <>
+struct char_type<const char32_t*> {
   typedef std::u32string str_type;
 };
 
 // specialization for when Tsrc == Tdst type
-template <typename Tdst> struct string_cast_spec<Tdst, Tdst> {
-  static const Tdst &cast(const Tdst &_source) { return _source; }
+template <typename Tdst>
+struct string_cast_spec<Tdst, Tdst> {
+  static const Tdst& cast(const Tdst& _source) { return _source; }
 };
 // normal conversion, when Tsrc != Tdst type
-template <typename Tdst, typename Tsrc> struct string_cast_spec {
-  static Tdst cast(const Tsrc &_source) {
+template <typename Tdst, typename Tsrc>
+struct string_cast_spec {
+  static Tdst cast(const Tsrc& _source) {
     return string_cast_converter<Tdst, Tsrc>::convert(_source);
   }
 };
@@ -137,37 +148,37 @@ template <typename Tdst, typename Tsrc> struct string_cast_spec {
 /*
  *	Explicit specializations for supporting Tdst=u32string conversion.
  */
-template <typename Tsrc> class string_cast_converter<std::u32string, Tsrc> {
-public:
+template <typename Tsrc>
+class string_cast_converter<std::u32string, Tsrc> {
+ public:
   template <typename Tstring>
-  static std::u32string convert(const Tstring &_source) {
+  static std::u32string convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
-  static std::u32string _convert(const std::u16string &_str) {
+ private:
+  static std::u32string _convert(const std::u16string& _str) {
     return string_cast<std::u32string>(string_cast<std::string>(_str));
   }
-  static std::u32string _convert(const std::wstring &_str) {
+  static std::u32string _convert(const std::wstring& _str) {
     if (useLargeWchar)
-      return std::u32string(reinterpret_cast<const char32_t *>(_str.c_str()),
+      return std::u32string(reinterpret_cast<const char32_t*>(_str.c_str()),
                             _str.size());
     else
       return string_cast<std::u32string>(string_cast<std::u16string>(_str));
   }
-  static std::u32string _convert(const std::string &_str) {
+  static std::u32string _convert(const std::string& _str) {
     utf32conv conv;
-    const auto &bytes = conv.from_bytes(_str);
-    return std::u32string(reinterpret_cast<const char32_t *>(bytes.c_str()),
+    const auto& bytes = conv.from_bytes(_str);
+    return std::u32string(reinterpret_cast<const char32_t*>(bytes.c_str()),
                           bytes.size());
   }
-  static std::u32string _convert(const bool &_b) {
-    if (_b)
-      return U"true";
+  static std::u32string _convert(const bool& _b) {
+    if (_b) return U"true";
     return U"false";
   }
   template <typename Tstring>
-  static std::u32string _convert(const Tstring &_num) {
+  static std::u32string _convert(const Tstring& _num) {
     static_assert(std::is_integral<Tstring>::value ||
                       std::is_floating_point<Tstring>::value,
                   "Only numeric arguments are supported in this routine.");
@@ -178,37 +189,37 @@ private:
 /*
  *	Explicit specializations for supporting Tdst=u16string conversion.
  */
-template <typename Tsrc> class string_cast_converter<std::u16string, Tsrc> {
-public:
+template <typename Tsrc>
+class string_cast_converter<std::u16string, Tsrc> {
+ public:
   template <typename Tstring>
-  static std::u16string convert(const Tstring &_source) {
+  static std::u16string convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
-  static std::u16string _convert(const std::u32string &_str) {
+ private:
+  static std::u16string _convert(const std::u32string& _str) {
     return string_cast<std::u16string>(string_cast<std::string>(_str));
   }
-  static std::u16string _convert(const std::wstring &_str) {
+  static std::u16string _convert(const std::wstring& _str) {
     if (useLargeWchar)
       return string_cast<std::u16string>(string_cast<std::string>(_str));
     else
-      return std::u16string(reinterpret_cast<const char16_t *>(_str.c_str()),
+      return std::u16string(reinterpret_cast<const char16_t*>(_str.c_str()),
                             _str.size());
   }
-  static std::u16string _convert(const std::string &_str) {
+  static std::u16string _convert(const std::string& _str) {
     utf16conv conv;
-    const auto &bytes = conv.from_bytes(_str);
-    return std::u16string(reinterpret_cast<const char16_t *>(bytes.c_str()),
+    const auto& bytes = conv.from_bytes(_str);
+    return std::u16string(reinterpret_cast<const char16_t*>(bytes.c_str()),
                           bytes.size());
   }
-  static std::u16string _convert(const bool &_b) {
-    if (_b)
-      return u"true";
+  static std::u16string _convert(const bool& _b) {
+    if (_b) return u"true";
     return u"false";
   }
   template <typename Tstring>
-  static std::u16string _convert(const Tstring &_num) {
+  static std::u16string _convert(const Tstring& _num) {
     static_assert(std::is_integral<Tstring>::value ||
                       std::is_floating_point<Tstring>::value,
                   "Only numeric arguments are supported in this routine.");
@@ -219,38 +230,39 @@ private:
 /*
  *	Explicit specializations for supporting Tdst=wstring conversion.
  */
-template <typename Tsrc> class string_cast_converter<std::wstring, Tsrc> {
-public:
+template <typename Tsrc>
+class string_cast_converter<std::wstring, Tsrc> {
+ public:
   template <typename Tstring>
-  static std::wstring convert(const Tstring &_source) {
+  static std::wstring convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
-  static std::wstring _convert(const std::u32string &_str) {
+ private:
+  static std::wstring _convert(const std::u32string& _str) {
     if (useLargeWchar) {
-      return std::wstring(reinterpret_cast<const wchar_t *>(_str.c_str()),
+      return std::wstring(reinterpret_cast<const wchar_t*>(_str.c_str()),
                           _str.size());
     } else {
-      const auto &u16 = string_cast<std::u16string>(_str);
-      return std::wstring(reinterpret_cast<const wchar_t *>(u16.c_str()),
+      const auto& u16 = string_cast<std::u16string>(_str);
+      return std::wstring(reinterpret_cast<const wchar_t*>(u16.c_str()),
                           u16.size());
     }
   }
-  static std::wstring _convert(const std::u16string &_str) {
+  static std::wstring _convert(const std::u16string& _str) {
     if (useLargeWchar) {
-      const auto &u32 = string_cast<std::u32string>(_str);
-      return std::wstring(reinterpret_cast<const wchar_t *>(u32.c_str()),
+      const auto& u32 = string_cast<std::u32string>(_str);
+      return std::wstring(reinterpret_cast<const wchar_t*>(u32.c_str()),
                           u32.size());
     } else {
-      return std::wstring(reinterpret_cast<const wchar_t *>(_str.c_str()),
+      return std::wstring(reinterpret_cast<const wchar_t*>(_str.c_str()),
                           _str.size());
     }
   }
-  static std::wstring _convert(const std::string &_str) {
+  static std::wstring _convert(const std::string& _str) {
     if (useLargeWchar) {
-      const auto &u32 = string_cast<std::u32string>(_str);
-      return std::wstring(reinterpret_cast<const wchar_t *>(u32.c_str()),
+      const auto& u32 = string_cast<std::u32string>(_str);
+      return std::wstring(reinterpret_cast<const wchar_t*>(u32.c_str()),
                           u32.size());
     } else {
       if (forceUCS_2) {
@@ -260,17 +272,16 @@ private:
       }
 
       std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> conv;
-      const auto &bytes = conv.from_bytes(_str);
+      const auto& bytes = conv.from_bytes(_str);
       return std::wstring(bytes.c_str(), bytes.size());
     }
   }
-  static std::wstring _convert(const bool &_b) {
-    if (_b)
-      return L"true";
+  static std::wstring _convert(const bool& _b) {
+    if (_b) return L"true";
     return L"false";
   }
   template <typename Tstring>
-  static std::wstring _convert(const Tstring &_num) {
+  static std::wstring _convert(const Tstring& _num) {
     static_assert(std::is_integral<Tstring>::value ||
                       std::is_floating_point<Tstring>::value,
                   "Only numeric arguments are supported in this routine.");
@@ -281,27 +292,28 @@ private:
 /*
  *	Explicit specializations for supporting Tdst=string conversion.
  */
-template <typename Tsrc> class string_cast_converter<std::string, Tsrc> {
-public:
+template <typename Tsrc>
+class string_cast_converter<std::string, Tsrc> {
+ public:
   template <typename Tstring>
-  static std::string convert(const Tstring &_source) {
+  static std::string convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
-  static std::string _convert(const std::u32string &_str) {
-    const auto p = reinterpret_cast<const utf32conv::wide_string::value_type *>(
+ private:
+  static std::string _convert(const std::u32string& _str) {
+    const auto p = reinterpret_cast<const utf32conv::wide_string::value_type*>(
         _str.c_str());
     utf32conv conv;
     return conv.to_bytes(p, p + _str.size());
   }
-  static std::string _convert(const std::u16string &_str) {
-    const auto p = reinterpret_cast<const utf16conv::wide_string::value_type *>(
+  static std::string _convert(const std::u16string& _str) {
+    const auto p = reinterpret_cast<const utf16conv::wide_string::value_type*>(
         _str.c_str());
     utf16conv conv;
     return conv.to_bytes(p, p + _str.size());
   }
-  static std::string _convert(const std::wstring &_str) {
+  static std::string _convert(const std::wstring& _str) {
     if (forceUCS_2) {
       std::wstring_convert<std::codecvt_utf8<wchar_t>> conv("Bad Convert",
                                                             L"Bad Convert");
@@ -310,20 +322,20 @@ private:
 
     if (useLargeWchar) {
       std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
-      const auto &bytes = conv.to_bytes(_str);
+      const auto& bytes = conv.to_bytes(_str);
       return std::string(bytes.c_str(), bytes.size());
     }
 
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> conv;
-    const auto &bytes = conv.to_bytes(_str);
+    const auto& bytes = conv.to_bytes(_str);
     return std::string(bytes.c_str(), bytes.size());
   }
-  static std::string _convert(const bool &_b) {
-    if (_b)
-      return "true";
+  static std::string _convert(const bool& _b) {
+    if (_b) return "true";
     return "false";
   }
-  template <typename Tstring> static std::string _convert(const Tstring &_num) {
+  template <typename Tstring>
+  static std::string _convert(const Tstring& _num) {
     static_assert(std::is_integral<Tstring>::value ||
                       std::is_floating_point<Tstring>::value,
                   "Only numeric arguments are supported in this routine.");
@@ -334,23 +346,25 @@ private:
 /*
  *	Explicit specializations for supporting Tdst=int conversion.
  */
-template <typename Tsrc> class string_cast_converter<int, Tsrc> {
-public:
-  template <typename Tstring> static int convert(const Tstring &_source) {
+template <typename Tsrc>
+class string_cast_converter<int, Tsrc> {
+ public:
+  template <typename Tstring>
+  static int convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
+ private:
   static int _convert(std::string _str) {
     return static_cast<int>(std::stoll(_str, 0, 0));
   }
   static int _convert(std::wstring _str) {
     return static_cast<int>(std::stoll(_str, 0, 0));
   }
-  static int _convert(const std::u16string &_str) {
+  static int _convert(const std::u16string& _str) {
     return static_cast<int>(string_cast<long long>(_str));
   }
-  static int _convert(const std::u32string &_str) {
+  static int _convert(const std::u32string& _str) {
     return static_cast<int>(string_cast<long long>(_str));
   }
 };
@@ -358,25 +372,25 @@ private:
 /*
  *	Explicit specializations for supporting Tdst=bool conversion.
  */
-template <typename Tsrc> class string_cast_converter<bool, Tsrc> {
-public:
-  template <typename Tstring> static bool convert(const Tstring &_source) {
+template <typename Tsrc>
+class string_cast_converter<bool, Tsrc> {
+ public:
+  template <typename Tstring>
+  static bool convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
-  static bool _convert(const std::string &_str) {
+ private:
+  static bool _convert(const std::string& _str) {
     std::string tempStr = _str;
     toLower(tempStr);
-    if (tempStr == "true")
-      return true;
+    if (tempStr == "true") return true;
     return false;
   }
-  static bool _convert(const std::wstring &_str) {
+  static bool _convert(const std::wstring& _str) {
     std::wstring tempStr = _str;
     toLower(tempStr);
-    if (tempStr == L"true")
-      return true;
+    if (tempStr == L"true") return true;
     return false;
   }
 };
@@ -384,28 +398,30 @@ private:
 /*
  *	Explicit specializations for supporting Tdst=long long conversion.
  */
-template <typename Tsrc> class string_cast_converter<long long, Tsrc> {
-public:
-  template <typename Tstring> static long long convert(const Tstring &_source) {
+template <typename Tsrc>
+class string_cast_converter<long long, Tsrc> {
+ public:
+  template <typename Tstring>
+  static long long convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
+ private:
   static long long _convert(std::string _str) { return std::stoll(_str, 0, 0); }
   static long long _convert(std::wstring _str) {
     return std::stoll(_str, 0, 0);
   }
-  static long long _convert(const std::u16string &_str) {
+  static long long _convert(const std::u16string& _str) {
     if (useLargeWchar)
       return string_cast<long long>(string_cast<std::u32string>(_str));
     else
       return string_cast<long long>(
-          reinterpret_cast<const wchar_t *>(_str.c_str()));
+          reinterpret_cast<const wchar_t*>(_str.c_str()));
   }
-  static long long _convert(const std::u32string &_str) {
+  static long long _convert(const std::u32string& _str) {
     if (useLargeWchar)
       return string_cast<long long>(
-          reinterpret_cast<const wchar_t *>(_str.c_str()));
+          reinterpret_cast<const wchar_t*>(_str.c_str()));
     else
       return string_cast<long long>(string_cast<std::string>(_str));
   }
@@ -415,31 +431,32 @@ private:
  *	Explicit specializations for supporting Tdst=unsigned long long
  *conversion.
  */
-template <typename Tsrc> class string_cast_converter<unsigned long long, Tsrc> {
-public:
+template <typename Tsrc>
+class string_cast_converter<unsigned long long, Tsrc> {
+ public:
   template <typename Tstring>
-  static unsigned long long convert(const Tstring &_source) {
+  static unsigned long long convert(const Tstring& _source) {
     return _convert(_source);
   }
 
-private:
+ private:
   static unsigned long long _convert(std::string _str) {
     return std::stoull(_str, 0, 0);
   }
   static unsigned long long _convert(std::wstring _str) {
     return std::stoull(_str, 0, 0);
   }
-  static unsigned long long _convert(const std::u16string &_str) {
+  static unsigned long long _convert(const std::u16string& _str) {
     if (useLargeWchar)
       return string_cast<unsigned long long>(string_cast<std::u32string>(_str));
     else
       return string_cast<unsigned long long>(
-          reinterpret_cast<const wchar_t *>(_str.c_str()));
+          reinterpret_cast<const wchar_t*>(_str.c_str()));
   }
-  static long long _convert(const std::u32string &_str) {
+  static long long _convert(const std::u32string& _str) {
     if (useLargeWchar)
       return string_cast<unsigned long long>(
-          reinterpret_cast<const wchar_t *>(_str.c_str()));
+          reinterpret_cast<const wchar_t*>(_str.c_str()));
     else
       return string_cast<unsigned long long>(string_cast<std::string>(_str));
   }
@@ -611,7 +628,7 @@ static bool UnitTest() {
 
 #endif
 
-} // end namespace StringCast
+}  // end namespace StringCast
 
 using namespace StringCast;
 

@@ -1,14 +1,16 @@
-#include "ActiveMap.hpp"
-#include "bitcask/Logger.hpp"
 #include <gtest/gtest.h>
+
 #include <iostream>
 #include <thread>
 #include <vector>
 
+#include "ActiveMap.hpp"
+#include "bitcask/Logger.hpp"
+
 using namespace bitcask;
 
 class ActiveMapTest : public ::testing::Test {
-protected:
+ protected:
   ActiveMap map;
 };
 
@@ -70,19 +72,17 @@ TEST_F(ActiveMapTest, ConcurrentPutsAllKeysReadable) {
   std::vector<std::thread> threads;
   threads.reserve(n);
   for (int i = 0; i < n; i++) {
-    threads.emplace_back([&, i]() {
-      map.Put(std::to_string(i), "v" + std::to_string(i));
-    });
+    threads.emplace_back(
+        [&, i]() { map.Put(std::to_string(i), "v" + std::to_string(i)); });
   }
-  for (auto &t : threads)
-    t.join();
+  for (auto& t : threads) t.join();
 
   for (int i = 0; i < n; i++)
     EXPECT_EQ(map.Get(std::to_string(i)).value_or(""), "v" + std::to_string(i))
         << "Missing key " << i;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   logger::init(logger::LOG_LEVEL_SILENCE);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
