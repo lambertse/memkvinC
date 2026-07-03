@@ -13,7 +13,7 @@ ActiveFile::~ActiveFile() {
     delete _file;
   }
 }
-file::FileHandler ActiveFile::Restore(const std::string &filename,
+FileHandler ActiveFile::Restore(const std::string &filename,
                                       const RecordFoundCallback &callback) {
   if (!std::filesystem::exists(filename)) {
     BITCASK_LOGGER_INFO("File does not exist: {}", filename);
@@ -22,7 +22,7 @@ file::FileHandler ActiveFile::Restore(const std::string &filename,
 
   // First open file in read mode to process existing records
   FileHandler read = new std::fstream();
-  if (!file::OpenFile(read, filename, std::ios::binary | std::ios::in)) {
+  if (!OpenFile(read, filename, std::ios::binary | std::ios::in)) {
     BITCASK_LOGGER_ERROR("Failed to open file for reading: {}", filename);
     return nullptr;
   }
@@ -34,8 +34,8 @@ file::FileHandler ActiveFile::Restore(const std::string &filename,
     delete read;
   }
   // Reopen in append mode for future writes
-  file::FileHandler result = new std::fstream();
-  if (!file::OpenFile(result, filename,
+  FileHandler result = new std::fstream();
+  if (!OpenFile(result, filename,
                       std::ios::binary | std::ios::in | std::ios::out |
                           std::ios::app)) {
     BITCASK_LOGGER_ERROR("Failed to open file for appending: {}", filename);
@@ -51,8 +51,8 @@ ActiveFile::Handler ActiveFile::Create(file::FileHandler file) {
   return std::make_shared<ActiveFile>(file);
 }
 ActiveFile::Handler ActiveFile::Create(const std::string &path) {
-  file::FileHandler file = new std::fstream();
-  if (!file::OpenFile(file, path,
+  FileHandler file = new std::fstream();
+  if (!OpenFile(file, path,
                       std::ios::binary | std::ios::in | std::ios::out |
                           std::ios::trunc)) {
     BITCASK_LOGGER_ERROR("Cannot create active file: {}", path);
@@ -65,10 +65,10 @@ Offset ActiveFile::Write(const Key &key, const Value &value) {
   return WriteRecord(_file, key, value).valueOffset;
 }
 
-file::FileHandler ActiveFile::Rotate() {
+FileHandler ActiveFile::Rotate() {
   _file->flush();
   _file->close();
-  file::FileHandler newFile = new std::fstream();
+  FileHandler newFile = new std::fstream();
   swap(_file, newFile);
   return newFile;
 }
