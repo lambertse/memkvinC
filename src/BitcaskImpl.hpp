@@ -17,8 +17,7 @@ namespace bitcask {
 using Writes = std::vector<struct Write>;
 class BitcaskImpl {
  public:
-  explicit BitcaskImpl(const std::string& dbDir,
-                       const Setting& setting = Setting{});
+  explicit BitcaskImpl(const Setting& setting = Setting{});
   ~BitcaskImpl();
 
   std::future<void> Put(const Key& key, const Value& value);
@@ -36,7 +35,6 @@ class BitcaskImpl {
 
  private:
   std::shared_mutex _mtx;
-  std::string _dbDir;
   std::atomic_bool _running;
   Setting _setting;
 
@@ -44,6 +42,7 @@ class BitcaskImpl {
   RecordMap _recordMap;
 
   std::thread _commitProcessor;
+  std::thread _compactProcessor;
   Writes _writes;
   std::map<uint32_t, std::shared_ptr<StableFile>> _stableFiles;
   std::shared_ptr<ActiveFile> _activeFile;
