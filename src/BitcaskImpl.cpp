@@ -2,13 +2,13 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <shared_mutex>
 #include <system_error>
 #include <thread>
 
 #include "bitcask/Logger.hpp"
+#include "bitcask/Type.hpp"
 
 namespace bitcask {
 using namespace file;
@@ -18,7 +18,7 @@ namespace Internal {
 std::string getActivePathInDir(const std::string& dbDir) {
   std::error_code ec;
   int maxFD = 0;
-  for (const auto& entry : std::filesystem::directory_iterator(dbDir, ec)) {
+  for (const auto& entry : fs::directory_iterator(dbDir, ec)) {
     if (!entry.is_regular_file()) {
       continue;
     }
@@ -58,10 +58,9 @@ bool BitcaskImpl::RestoreActiveMap() {
   // Pre-count stable files so we assign the correct active FD in the hints.
   // getActiveFD() returns _stableFiles.size(), but stable files aren't loaded
   // yet at this point, so we count from disk instead.
-  std::string activeFileName =
-      std::filesystem::path(activePath).filename().string();
+  std::string activeFileName = fs::path(activePath).filename().string();
   uint32_t stableCount = 0;
-  for (const auto& entry : std::filesystem::directory_iterator(dbPath, ec)) {
+  for (const auto& entry : fs::directory_iterator(dbPath, ec)) {
     if (!entry.is_regular_file()) continue;
     const auto fname = entry.path().filename().string();
     if (fname == activeFileName) continue;
@@ -72,7 +71,7 @@ bool BitcaskImpl::RestoreActiveMap() {
     }
   }
 
-  if (std::filesystem::exists(activePath, ec)) {
+  if (fs::exists(activePath, ec)) {
     RecordFoundCallback callback = [this, stableCount](const Key& key,
                                                        const Value& value,
                                                        RecordInf record) {
@@ -95,11 +94,9 @@ bool BitcaskImpl::RestoreStableMap() {
   std::error_code ec;
   std::string dbPath = _setting.GetDbPath();
   std::string activeFileName =
-      std::filesystem::path(Internal::getActivePathInDir(dbPath))
-          .filename()
-          .string();
+      fs::path(Internal::getActivePathInDir(dbPath)).filename().string();
 
-  for (const auto& entry : std::filesystem::directory_iterator(dbPath, ec)) {
+  for (const auto& entry : fs::directory_iterator(dbPath, ec)) {
     if (!entry.is_regular_file() ||
         entry.path().filename().string() == activeFileName) {
       continue;

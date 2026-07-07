@@ -3,8 +3,9 @@
 #include <gtest/gtest.h>
 
 #include <bitcask/Logger.hpp>
-#include <filesystem>
 #include <iostream>
+
+#include "bitcask/Type.hpp"
 
 using namespace bitcask;
 
@@ -15,7 +16,7 @@ static std::string makeTmpDir(const std::string& prefix) {
       std::to_string(
           std::chrono::steady_clock::now().time_since_epoch().count()) +
       "/";
-  std::filesystem::create_directories(path);
+  fs::create_directories(path);
   return path;
 }
 
@@ -28,7 +29,7 @@ class BitCaskTest : public ::testing::Test {
   void TearDown() override {
     delete _db;
     _db = nullptr;
-    std::filesystem::remove_all(_dbDir);
+    fs::remove_all(_dbDir);
   }
 
  protected:
@@ -126,7 +127,7 @@ class BitCaskRotationTest : public ::testing::Test {
   void TearDown() override {
     delete _db;
     _db = nullptr;
-    std::filesystem::remove_all(_dbDir);
+    fs::remove_all(_dbDir);
   }
 
  protected:
@@ -151,7 +152,7 @@ TEST_F(BitCaskRotationTest, MultipleStableFilesCreated) {
 
   // At least one .db file beyond the active file should exist
   int dbFileCount = 0;
-  for (auto& entry : std::filesystem::directory_iterator(_dbDir))
+  for (auto& entry : fs::directory_iterator(_dbDir))
     if (entry.path().extension() == ".db") dbFileCount++;
 
   EXPECT_GT(dbFileCount, 1) << "Expected rotation to create multiple .db files";

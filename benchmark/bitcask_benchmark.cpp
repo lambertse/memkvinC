@@ -3,7 +3,6 @@
 #include <bitcask/Bitcask.hpp>
 #include <bitcask/Setting.hpp>
 #include <cstdlib>
-#include <filesystem>
 #include <string>
 
 namespace fs = std::filesystem;

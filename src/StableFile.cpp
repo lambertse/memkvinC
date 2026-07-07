@@ -1,7 +1,5 @@
 #include "StableFile.hpp"
 
-#include <filesystem>
-
 #include "File.hpp"
 #include "bitcask/Logger.hpp"
 
@@ -17,7 +15,7 @@ StableFile::~StableFile() {
 
 file::FileHandler StableFile::Restore(const std::string& filename,
                                       const RecordFoundCallback& callback) {
-  if (!std::filesystem::exists(filename)) return nullptr;
+  if (!fs::exists(filename)) return nullptr;
 
   file::FileHandler file = new std::fstream();
   if (!file::OpenFile(file, filename, std::ios::binary | std::ios::in) ||

@@ -1,7 +1,5 @@
 #include "File.hpp"
 
-#include <filesystem>
-
 #include "bitcask/Logger.hpp"
 #include "bitcask/Type.hpp"
 

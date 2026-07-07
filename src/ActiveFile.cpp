@@ -1,10 +1,9 @@
 #include "ActiveFile.hpp"
 
-#include <filesystem>
-
 #include "File.hpp"
 #include "Record.hpp"
 #include "bitcask/Logger.hpp"
+#include "bitcask/Type.hpp"
 
 namespace bitcask {
 using namespace file;
@@ -17,7 +16,7 @@ ActiveFile::~ActiveFile() {
 }
 FileHandler ActiveFile::Restore(const std::string& filename,
                                 const RecordFoundCallback& callback) {
-  if (!std::filesystem::exists(filename)) {
+  if (!fs::exists(filename)) {
     BITCASK_LOGGER_INFO("File does not exist: {}", filename);
     return nullptr;
   }
