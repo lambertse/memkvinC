@@ -138,9 +138,10 @@ int main() {
 
 ```cpp
 bitcask::Setting setting;
+setting.dbPath = "/tmp/mydb/"; 
 setting.maxFileSize = 64 * 1024 * 1024; // rotate every 64 MB (default: 1 GB)
 
-bitcask::Bitcask *db = bitcask::Bitcask::Create("/tmp/mydb/", setting);
+bitcask::Bitcask *db = bitcask::Bitcask::Create(setting);
 ```
 
 ### Linking (CMake consumer)

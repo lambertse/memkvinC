@@ -23,7 +23,7 @@ class BitCaskTest : public ::testing::Test {
  public:
   void SetUp() override {
     _dbDir = makeTmpDir("bitcask_test");
-    _db = Bitcask::Create(_dbDir);
+    _db = Bitcask::Create(Setting(_dbDir));
   }
   void TearDown() override {
     delete _db;
@@ -120,8 +120,8 @@ class BitCaskRotationTest : public ::testing::Test {
   void SetUp() override {
     _dbDir = makeTmpDir("bitcask_rotation");
     Setting s;
-    s.maxFileSize = 128;  // tiny: forces rotation every ~2-3 records
-    _db = Bitcask::Create(_dbDir, s);
+    s.SetDbPath(_dbDir).SetMaxFileSize(128);
+    _db = Bitcask::Create(s);
   }
   void TearDown() override {
     delete _db;
@@ -165,8 +165,8 @@ TEST_F(BitCaskRotationTest, DataPersistsAfterRestartWithRotation) {
 
   // Reopen
   Setting s;
-  s.maxFileSize = 128;
-  _db = Bitcask::Create(_dbDir, s);
+  s.SetDbPath(_dbDir).SetMaxFileSize(128);
+  _db = Bitcask::Create(s);
 
   for (int i = 0; i < 20; i++)
     EXPECT_EQ(_db->Get("key" + std::to_string(i)).value_or(""),

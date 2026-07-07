@@ -1,5 +1,6 @@
 #include "BitcaskImpl.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -14,12 +15,6 @@ using namespace file;
 
 namespace {
 namespace Internal {
-std::string ensureEndingSlash(const std::string& path) {
-  if (path.empty() || path.back() == '/') {
-    return path;
-  }
-  return path + "/";
-}
 std::string getActivePathInDir(const std::string& dbDir) {
   std::error_code ec;
   int maxFD = 0;
@@ -57,7 +52,8 @@ using Writes = std::vector<Write>;
 
 bool BitcaskImpl::RestoreActiveMap() {
   std::error_code ec;
-  auto activePath = Internal::getActivePathInDir(_dbDir);
+  std::string dbPath = _setting.GetDbPath();
+  auto activePath = Internal::getActivePathInDir(dbPath);
 
   // Pre-count stable files so we assign the correct active FD in the hints.
   // getActiveFD() returns _stableFiles.size(), but stable files aren't loaded
@@ -65,7 +61,7 @@ bool BitcaskImpl::RestoreActiveMap() {
   std::string activeFileName =
       std::filesystem::path(activePath).filename().string();
   uint32_t stableCount = 0;
-  for (const auto& entry : std::filesystem::directory_iterator(_dbDir, ec)) {
+  for (const auto& entry : std::filesystem::directory_iterator(dbPath, ec)) {
     if (!entry.is_regular_file()) continue;
     const auto fname = entry.path().filename().string();
     if (fname == activeFileName) continue;
@@ -97,12 +93,13 @@ bool BitcaskImpl::RestoreActiveMap() {
 
 bool BitcaskImpl::RestoreStableMap() {
   std::error_code ec;
+  std::string dbPath = _setting.GetDbPath();
   std::string activeFileName =
-      std::filesystem::path(Internal::getActivePathInDir(_dbDir))
+      std::filesystem::path(Internal::getActivePathInDir(dbPath))
           .filename()
           .string();
 
-  for (const auto& entry : std::filesystem::directory_iterator(_dbDir, ec)) {
+  for (const auto& entry : std::filesystem::directory_iterator(dbPath, ec)) {
     if (!entry.is_regular_file() ||
         entry.path().filename().string() == activeFileName) {
       continue;
@@ -120,11 +117,8 @@ bool BitcaskImpl::RestoreStableMap() {
   return true;
 }
 
-BitcaskImpl::BitcaskImpl(const std::string& dbDir, const Setting& setting)
+BitcaskImpl::BitcaskImpl(const Setting& setting)
     : _running(true), _setting(setting) {
-  BITCASK_LOGGER_INFO("Max file size: {}", setting.maxFileSize);
-  _dbDir = Internal::ensureEndingSlash(dbDir);
-
   RestoreActiveMap();
   RestoreStableMap();
 
@@ -170,6 +164,8 @@ uint32_t BitcaskImpl::getActiveFD() const { return _stableFiles.size(); }
 
 bool BitcaskImpl::CommitWrite(Writes& writes) {
   std::map<uint32_t, std::shared_ptr<StableFile>> newStableFiles;
+  std::string dbPath = _setting.GetDbPath();
+  size_t maxFileSize = _setting.GetMaxFileSize();
   std::vector<Hint> records;
   int idx = 0, lastActiveWrite = 0;
 
@@ -180,7 +176,7 @@ bool BitcaskImpl::CommitWrite(Writes& writes) {
     auto valueOffset = _activeFile->Write(key, value);
     records.push_back(Hint{getActiveFD(), valueOffset, (uint32_t)value.size()});
     idx++;
-    if (valueOffset < _setting.maxFileSize) {
+    if (valueOffset < maxFileSize) {
       continue;
     }
     BITCASK_LOGGER_INFO("Rotate active file");
@@ -188,12 +184,12 @@ bool BitcaskImpl::CommitWrite(Writes& writes) {
     _activeFile->Rotate();
     auto fd = getActiveFD() + newStableFiles.size();
     FileHandler handler = new std::fstream();
-    handler->open(_dbDir + std::to_string(fd) + ".db",
+    handler->open(dbPath + std::to_string(fd) + ".db",
                   std::ios::binary | std::ios::in | std::ios::app);
     newStableFiles[fd] = StableFile::Create(handler);
     lastActiveWrite = idx;
 
-    std::string newActiveFileName = _dbDir + std::to_string(fd + 1) + ".db";
+    std::string newActiveFileName = dbPath + std::to_string(fd + 1) + ".db";
     _activeFile = ActiveFile::Create(newActiveFileName);
   }
   {

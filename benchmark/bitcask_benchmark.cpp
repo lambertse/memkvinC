@@ -31,8 +31,8 @@ static std::string make_value(size_t size, char fill = 'v') {
 
 template <size_t ValueSize>
 static void BM_Put(benchmark::State& state) {
-  std::string dir = make_temp_dir();
-  auto* db = bitcask::Bitcask::Create(dir);
+  auto dir = make_temp_dir();
+  auto* db = bitcask::Bitcask::Create(bitcask::Setting(dir));
 
   int i = 0;
   for (auto _ : state) {
@@ -56,7 +56,7 @@ BENCHMARK_TEMPLATE(BM_Put, 1024)->Iterations(10000);
 template <size_t ValueSize>
 static void BM_PutAsync(benchmark::State& state) {
   std::string dir = make_temp_dir();
-  auto* db = bitcask::Bitcask::Create(dir);
+  auto* db = bitcask::Bitcask::Create(bitcask::Setting(dir));
 
   int i = 0;
   constexpr int kDrainEvery = 256;
@@ -87,7 +87,7 @@ BENCHMARK_TEMPLATE(BM_PutAsync, 1024)->Iterations(10000);
 template <size_t ValueSize>
 static void BM_Get_HotCache(benchmark::State& state) {
   std::string dir = make_temp_dir();
-  auto* db = bitcask::Bitcask::Create(dir);
+  auto* db = bitcask::Bitcask::Create(bitcask::Setting(dir));
 
   const int N = 10000;
   for (int i = 0; i < N; ++i) db->Put(make_key(i), make_value(ValueSize));
@@ -115,8 +115,8 @@ static void BM_Get_StableFile(benchmark::State& state) {
   std::string dir = make_temp_dir();
   // Small file size to force rotation after every few records
   bitcask::Setting setting;
-  setting.maxFileSize = 4 * 1024;
-  auto* db = bitcask::Bitcask::Create(dir, setting);
+  setting.SetDbPath(dir).SetMaxFileSize(4 * 1024);
+  auto* db = bitcask::Bitcask::Create(setting);
 
   // Write enough records so all data is in stable files
   const int N = 200;
@@ -143,7 +143,7 @@ BENCHMARK_TEMPLATE(BM_Get_StableFile, 1024)->Iterations(20000);
 
 static void BM_PutGet_Mixed(benchmark::State& state) {
   std::string dir = make_temp_dir();
-  auto* db = bitcask::Bitcask::Create(dir);
+  auto* db = bitcask::Bitcask::Create(bitcask::Setting(dir));
 
   const int N = 5000;
   for (int i = 0; i < N; ++i) db->Put(make_key(i), make_value(64));

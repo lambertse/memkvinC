@@ -9,8 +9,7 @@
 namespace bitcask {
 class Bitcask {
  public:
-  static BITCASK_EXPORT Bitcask* Create(const std::string& dbDir,
-                                        const Setting& setting = Setting{});
+  static BITCASK_EXPORT Bitcask* Create(const Setting& setting = Setting{});
   ~Bitcask();
 
   BITCASK_EXPORT void Put(const Key& key, const Value& value);
@@ -20,7 +19,7 @@ class Bitcask {
   BITCASK_EXPORT bool Delete(const Key& key);
 
  private:
-  Bitcask(const std::string& dbDir, const Setting& setting = Setting{});
+  Bitcask(const Setting& setting = Setting{});
   Bitcask(const Bitcask&);
   Bitcask& operator=(const Bitcask&);
 
