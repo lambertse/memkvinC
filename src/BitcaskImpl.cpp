@@ -2,13 +2,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <shared_mutex>
 #include <system_error>
 #include <thread>
 
-#include "bitcask/Logger.hpp"
 #include "bitcask/Define.hpp"
+#include "bitcask/Logger.hpp"
 
 namespace bitcask {
 using namespace file;
@@ -96,7 +97,23 @@ bool BitcaskImpl::RestoreStableMap() {
   std::string activeFileName =
       fs::path(Internal::getActivePathInDir(dbPath)).filename().string();
 
+  std::vector<std::filesystem::directory_entry> entries;
   for (const auto& entry : fs::directory_iterator(dbPath, ec)) {
+    if (!entry.is_regular_file() ||
+        entry.path().filename().string() == activeFileName) {
+      continue;
+    }
+    entries.push_back(entry);
+  }
+
+  std::sort(entries.begin(), entries.end(),
+            [](const std::filesystem::directory_entry& a,
+               const std::filesystem::directory_entry& b) {
+              return a.path().filename().string() <
+                     b.path().filename().string();
+            });
+
+  for (const auto& entry : entries) {
     if (!entry.is_regular_file() ||
         entry.path().filename().string() == activeFileName) {
       continue;
@@ -116,8 +133,8 @@ bool BitcaskImpl::RestoreStableMap() {
 
 BitcaskImpl::BitcaskImpl(const Setting& setting)
     : _running(true), _setting(setting) {
-  RestoreActiveMap();
   RestoreStableMap();
+  RestoreActiveMap();
 
   _commitProcessor = std::thread(std::bind(&BitcaskImpl::CommitWorker, this));
 }

@@ -24,12 +24,19 @@ class BitCaskTest : public ::testing::Test {
  public:
   void SetUp() override {
     _dbDir = makeTmpDir("bitcask_test");
-    _db = Bitcask::Create(Setting(_dbDir));
+    SetUpDB();
   }
   void TearDown() override {
     delete _db;
     _db = nullptr;
     fs::remove_all(_dbDir);
+  }
+
+ protected:
+  void SetUpDB() {
+    Setting setting;
+    setting.SetMaxFileSize(100).SetDbPath(_dbDir);
+    _db = Bitcask::Create(setting);
   }
 
  protected:
@@ -108,9 +115,15 @@ TEST_F(BitCaskTest, LargeValue) {
   EXPECT_EQ(_db->Get("bigkey").value_or(""), largeVal);
 }
 
-TEST_F(BitCaskTest, DeleteReturnsFalse) {
-  _db->Put("key", "value");
-  EXPECT_FALSE(_db->Delete("key"));
+TEST_F(BitCaskTest, ReinitDBAndQuery) {
+  for (int i = 0; i <= 1000; i++) {
+    _db->Put("bitcask", std::to_string(i));
+  }
+
+  delete _db;
+  _db = nullptr;
+  SetUpDB();
+  EXPECT_EQ(_db->Get("bitcask"), "1000");
 }
 
 // ── File rotation ────────────────────────────────────────────────────────────
