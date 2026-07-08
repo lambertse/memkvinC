@@ -10,8 +10,8 @@
 #include "ActiveMap.hpp"
 #include "RecordMap.hpp"
 #include "StableFile.hpp"
-#include "bitcask/Setting.hpp"
 #include "bitcask/Define.hpp"
+#include "bitcask/Setting.hpp"
 namespace bitcask {
 
 using Writes = std::vector<struct Write>;
