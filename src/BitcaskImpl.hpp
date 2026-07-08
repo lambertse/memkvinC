@@ -11,7 +11,7 @@
 #include "RecordMap.hpp"
 #include "StableFile.hpp"
 #include "bitcask/Setting.hpp"
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 namespace bitcask {
 
 using Writes = std::vector<struct Write>;

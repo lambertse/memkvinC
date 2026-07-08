@@ -3,7 +3,7 @@
 #include "CRC32.hpp"
 #include "File.hpp"
 #include "bitcask/Logger.hpp"
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 namespace bitcask {
 
 // Record structure:

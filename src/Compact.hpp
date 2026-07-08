@@ -1,11 +1,14 @@
 #pragma once
 
 #include <cstddef>
+
+#include "bitcask/Define.hpp"
+namespace bitcask {
 class Compact {
  public:
-  Compact(double srcPercentage, size_t srcThreshold);
+  Compact(const fs::path& dbPath);
 
  private:
-  double deadKeyCompactionPercentage;
-  size_t deadKeyCompactionSize;
+  fs::path _dbPath;
 };
+}  // namespace bitcask

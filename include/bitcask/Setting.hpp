@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 namespace bitcask {
 
 struct Setting {

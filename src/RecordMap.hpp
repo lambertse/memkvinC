@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "Hint.hpp"
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 #include "libcuckoo/cuckoohash_map.hh"
 
 namespace bitcask {

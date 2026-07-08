@@ -2,7 +2,7 @@
 #include <libcuckoo/cuckoohash_map.hh>
 #include <optional>
 
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 
 namespace bitcask {
 

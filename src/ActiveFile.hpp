@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "Record.hpp"
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 
 namespace bitcask {
 

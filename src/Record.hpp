@@ -3,7 +3,7 @@
 #include <functional>
 
 #include "File.hpp"
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 
 namespace bitcask {
 

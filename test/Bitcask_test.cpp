@@ -5,7 +5,7 @@
 #include <bitcask/Logger.hpp>
 #include <iostream>
 
-#include "bitcask/Type.hpp"
+#include "bitcask/Define.hpp"
 
 using namespace bitcask;
 

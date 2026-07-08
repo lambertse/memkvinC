@@ -5,7 +5,7 @@
 
 #include "LibExport.hpp"
 #include "Setting.hpp"
-#include "Type.hpp"
+#include "Define.hpp"
 namespace bitcask {
 class Bitcask {
  public:
