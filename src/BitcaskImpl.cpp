@@ -77,8 +77,6 @@ bool BitcaskImpl::RestoreActiveMap() {
     RecordFoundCallback callback = [this, stableCount](const Key& key,
                                                        const Value& value,
                                                        RecordInf record) {
-      if (value == BITCASK_TOMBSTONE_VALUE) return;
-
       Hint hint{stableCount, record.valueOffset, (uint32_t)value.size()};
       _recordMap.Put(key, hint);
       _activeMap.Put(key, value);
@@ -117,16 +115,9 @@ bool BitcaskImpl::RestoreStableMap() {
             });
 
   for (const auto& entry : entries) {
-    if (!entry.is_regular_file() ||
-        entry.path().filename().string() == activeFileName) {
-      continue;
-    }
-
     uint32_t fileID = std::stoul(entry.path().filename().string());
     RecordFoundCallback callback = [&](const Key& key, const Value& value,
                                        RecordInf record) {
-      if (value == BITCASK_TOMBSTONE_VALUE) return;
-
       Hint hint{fileID, record.valueOffset, (uint32_t)value.size()};
       _recordMap.Put(key, hint);
     };
@@ -183,13 +174,16 @@ std::optional<Value> BitcaskImpl::Get(const Key& key) {
 }
 
 bool BitcaskImpl::Delete(const Key& key) {
-  std::lock_guard lock(_mtx);
-  auto recordOpt = _recordMap.Get(key);
-  if (!recordOpt.has_value()) {
-    return false;
-  }
-  _writes.emplace_back(Write{key, BITCASK_TOMBSTONE_VALUE});
-  auto ftr = _writes.back().promise.get_future();
+  std::future<void> ftr;
+  {
+    std::lock_guard lock(_mtx);
+    auto recordOpt = _recordMap.Get(key);
+    if (!recordOpt.has_value()) {
+      return false;
+    }
+    _writes.emplace_back(Write{key, BITCASK_TOMBSTONE_VALUE});
+    ftr = _writes.back().promise.get_future();
+  }  // exclusive lock released before blocking
   ftr.get();
   return true;
 }
