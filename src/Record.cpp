@@ -45,7 +45,11 @@ bool ReadRecord(file::FileHandler& file, Key& key, Value& value,
                 RecordInf& record) {
   RecordHeader header;
   if (!file::ReadFile(file, &header, sizeof(header))) {
-    BITCASK_LOGGER_ERROR("Failed to read record header");
+    if (file->gcount() > 0) {
+      BITCASK_LOGGER_ERROR(
+          "Failed to read record header: partial read ({} of {} bytes)",
+          file->gcount(), sizeof(header));
+    }
     return false;
   }
   record.keyOffset = file->tellp();
